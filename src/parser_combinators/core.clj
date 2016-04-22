@@ -79,13 +79,11 @@
   (bind (lit x) (fn [_]
                   (forever x))))
 
-;; (declare exp)
-;; (def exp' (alt (conc (lit '+') exp (fn [_ x] (fn [y] (+ (parse x) y)))) ))
-;; ((fn [] )) (def exp (conc term exp'))
+(defmacro defer [parser]
+  `(fn [s#] ((~parser) s#)))
 
-
-;; (declare y)
-;; (defn x (fn [] (+ 1 y)))
-;; (def y 2)
-
-(def fibs (list* 0 1 (map + fibs (rest fibs))))
+(defn many [p]
+  (alt (bind p
+             (fn [v]
+               (fmap #(cons v %) (many p))))
+       (succeed)))
