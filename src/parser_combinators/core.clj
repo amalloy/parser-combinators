@@ -58,7 +58,10 @@
   (fn [s k]
     (a s (fn [[result [value remainder] :as r]]
            (if (= result :success)
-             (k r)
+             (let [[result [value remainder] :as r] (k r)]
+               (if (= result :success)
+                 r
+                 (b s k)))
              (b s k))))))
 
 ;; Parser ()
