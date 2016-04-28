@@ -26,7 +26,7 @@
 ;; Parser ()
 (defn succeed []
   (fn [s k]
-    (k [:success [() s]])))
+    (k [:success [nil s]])))
 
 ;; Char -> Parser Char
 (defn lit [x]
@@ -68,7 +68,7 @@
 (defn empty []
   (fn [s k]
     (k (if (empty? s)
-         [:success [() s]]
+         [:success [nil s]]
          [:failure "not empty"]))))
 
 (defn forever [x]
