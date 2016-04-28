@@ -78,11 +78,18 @@
 (defmacro defer [parser]
   `(fn [s#] (~parser s#)))
 
-;; A = '' | abA
+;; A = abAA | ''
+
+abab
+
+A -> abAA -> abA'' -> ababAA'' -> abab''''''
+A -> abAA -> ab''A -> ab''abAA -> ab''ab''''
 
 (def A (alt (succeed)
-            (conc (lit \a)
-                  (conc (lit \b) #'A str)
+            (conc #'A
+                  (conc (lit \a)
+                        (lit \b)
+                        str)
                   str)))
 (def S (conc #'A (empty) (fn [a b] a)))
 
