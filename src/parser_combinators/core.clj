@@ -80,7 +80,7 @@
                   (forever x))))
 
 (defmacro defer [parser]
-  `(fn [s#] ((~parser) s#)))
+  `(fn [s#] (~parser s#)))
 
 (defn many [p]
   (alt (bind p
