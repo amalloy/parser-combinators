@@ -55,7 +55,7 @@
       (if (= result :failure)
         r
         (let [[result2 [value2 remainder2] :as r2] (b remainder)]
-          (if (= result :failure)
+          (if (= result2 :failure)
             r2
             [:success [(f value value2) remainder2]]))))))
 
