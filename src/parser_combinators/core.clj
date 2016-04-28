@@ -48,6 +48,11 @@
                 (fn [y]
                   (return (f x y)))))))
 
+#_(defn conc-do [a b f]
+  (do [x a
+       y b]
+      (f x y)))
+
 ;; Parser a -> Parser b -> (a -> b -> c) -> Parser c
 (defn conc [a b f]
   (fn [s]
@@ -81,6 +86,20 @@
 
 (defmacro defer [parser]
   `(fn [s#] (~parser s#)))
+
+;; A = '' | abA
+
+(def A (alt (succeed)
+            (conc (lit \a)
+                  (conc (lit \b) #'A str)
+                  str)))
+(def S (conc #'A (empty) (fn [a b] a)))
+
+[""
+ "ab"
+ "abab"
+ "ababab"] ;;not cccdfvababab
+
 
 (defn many [p]
   (alt (bind p
