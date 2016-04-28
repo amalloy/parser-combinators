@@ -2,17 +2,17 @@
 
 ;; Monad m => a -> m a
 (defn return [x]
-  (fn [s]
-    [:success [x, s]]))
+  (fn [s k]
+    (k [:success [x, s]])))
 
 ;; Monad m => m a -> (a -> m b) -> m b
 (defn bind [p f]
-  (fn [s]
-    (let [[result [value remainder] :as r] (p s)]
-      (if (= result :failure)
-        r
-        (let [p' (f value)]
-          (p' remainder))))))
+  (fn [s k]
+    (p s (fn [[result [value remainder] :as r]]
+           (if (= result :failure)
+             (k r)
+             (let [p' (f value)]
+               (p' remainder k)))))))
 
 ;; Monad m => (a -> b) -> m a -> m b
 (defn fmap [f p]
@@ -20,20 +20,20 @@
 
 ;; Parser a
 (defn fail [msg]
-  (fn [s]
-    [:failure msg]))
+  (fn [s k]
+    (k [:failure msg])))
 
 ;; Parser ()
 (defn succeed []
-  (fn [s]
-    [:success [() s]]))
+  (fn [s k]
+    (k [:success [() s]])))
 
 ;; Char -> Parser Char
 (defn lit [x]
-  (fn [s]
-    (cond (empty? s) [:failure "empty"]
-          (= x (first s)) [:success [x (rest s)]]
-          :else [:failure "no match"])))
+  (fn [s k]
+    (k (cond (empty? s) [:failure "empty"]
+             (= x (first s)) [:success [x (rest s)]]
+             :else [:failure "no match"]))))
 
 ;; Parser a -> Parser b -> Parser b
 (defn conc' [a b]
@@ -41,7 +41,7 @@
         (fn [_]
           b)))
 
-(defn conc-monadic [a b f]
+(defn conc [a b f]
   (bind a
         (fn [x]
           (bind b
@@ -53,32 +53,20 @@
        y b]
       (f x y)))
 
-;; Parser a -> Parser b -> (a -> b -> c) -> Parser c
-(defn conc [a b f]
-  (fn [s]
-    (let [[result [value remainder] :as r] (a s)]
-      (if (= result :failure)
-        r
-        (let [[result2 [value2 remainder2] :as r2] (b remainder)]
-          (if (= result2 :failure)
-            r2
-            [:success [(f value value2) remainder2]]))))))
-
 ;; Parser a -> Parser a -> Parser a
 (defn alt [a b]
-  (fn [s]
-    (let [r (a s)
-          [result [value remainder]] r]
-      (if (= result :success)
-        r
-        (b s)))))
+  (fn [s k]
+    (a s (fn [[result [value remainder] :as r]]
+           (if (= result :success)
+             (k r)
+             (b s k))))))
 
 ;; Parser ()
 (defn empty []
-  (fn [s]
-    (if (empty? s)
-      [:success [() s]]
-      [:failure "not empty"])))
+  (fn [s k]
+    (k (if (empty? s)
+         [:success [() s]]
+         [:failure "not empty"]))))
 
 (defn forever [x]
   (bind (lit x) (fn [_]
